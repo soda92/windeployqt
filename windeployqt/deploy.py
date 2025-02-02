@@ -15,14 +15,14 @@ cyg_prefix = ""
 def get_real_dep(dep):
     global cyg_prefix
     if cyg_prefix == "":
-        s = msys2_run(f"cygpath -m {dep}")
+        s = msys2_run("cygpath -m /ucrt64/bin/bash")
         cyg_prefix = s.split("/ucrt64/bin")[0]
     return cyg_prefix + dep
 
 
 def deploy_if_qml(file, destdir):
     qml_dirs = list(
-        glob.glob("**/qmldir", recursive=True, root_dir=str(Path(file).parent))
+        glob.glob("*/qmldir", root_dir=str(Path(file).parent))
     )
     if len(qml_dirs) > 0:
         shutil.copytree(
@@ -35,28 +35,36 @@ def deploy_if_qml(file, destdir):
 
         for qml_dir in qml_dirs:
             qml_dir = Path(file).parent.joinpath(qml_dir).resolve().parent
-            shutil.copytree(qml_dir, destdir.joinpath(qml_dir.name), dirs_exist_ok=True)
+            dst = destdir.joinpath(qml_dir.name)
+            if qml_dir != dst:
+                shutil.copytree(qml_dir, dst, dirs_exist_ok=True)
 
 
-def copy_deps(file, destdir):
-    cygpath = msys2_run(f"cygpath -u {file}")
+def copy_deps(file: Path, destdir):
+    file_str = str(file).replace("\\", "/")
+    cygpath = msys2_run(f"cygpath -u {file_str}")
     s = msys2_run(f"ldd {cygpath}")
 
     for line in s.split("\n"):
-        dep = line.split("=>")[1].split()[0]
+        dep = ""
+        try:
+            dep = line.split("=>")[1].split()[0]
+        except IndexError as e:
+            print(e)
+            print(s)
+            return
         dep = dep.lower()
 
-        if not dep.startswith("/c/windows"):
+        if not dep.startswith("/c/"):
             # print(dep)
             real_dep = get_real_dep(dep)
             print(real_dep)
             shutil.copy(real_dep, destdir)
 
 
-def deploy(file, d):
-    destdir = Path(d).resolve().joinpath("dist")
+def deploy(file, d, destdir):
     destdir.mkdir(exist_ok=True)
-    print("deploying " + file)
+    print("deploying " + str(file))
 
     copy_deps(file, destdir)
 
@@ -64,5 +72,6 @@ def deploy(file, d):
         get_real_dep("/ucrt64/share/qt6/plugins"), destdir, dirs_exist_ok=True
     )
 
-    shutil.copy(file, destdir)
+    if not Path(file).parent == Path(destdir):
+        shutil.copy(file, destdir)
     deploy_if_qml(file, destdir)

@@ -1,10 +1,12 @@
 [project]
 name = "windeployqt"
-version = "2025.2.2.0"
+version = "2025.2.3.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pywin32>=308",
+]
 
 [dependency-groups]
 dev = ["build", "twine"]
@@ -12,7 +14,7 @@ dev = ["build", "twine"]
 Repository = "https://github.com/soda92/windeployqt"
 
 [project.scripts]
-windeployqt = "windeployqt.hello:main2"
+windeployqt = "windeployqt.main:main"
 
 [build-system]
 requires = ["hatchling"]
