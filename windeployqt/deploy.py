@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 import shutil
+import glob
 
 
 def msys2_run(cmd):
@@ -19,22 +20,27 @@ def get_real_dep(dep):
     return cyg_prefix + dep
 
 
-def copy_plugins(dest: Path):
-    f = "/ucrt64/share/qt6/plugins/platforms/qwindows.dll"
-    target = dest.joinpath("platforms").joinpath(Path(f).name)
-    target.parent.mkdir(exist_ok=True, parents=True)
-    f = get_real_dep(f)
-    print(f)
-    shutil.copy(f, target)
+def deploy_if_qml(file, destdir):
+    qml_dirs = list(
+        glob.glob("**/qmldir", recursive=True, root_dir=str(Path(file).parent))
+    )
+    if len(qml_dirs) > 0:
+        shutil.copytree(
+            get_real_dep("/ucrt64/share/qt6/qml/QtQuick"),
+            destdir.joinpath("QtQuick"),
+            dirs_exist_ok=True,
+        )
+        dep2 = str(destdir.joinpath("QtQuick/qtquick2plugin.dll")).replace("\\", "/")
+        copy_deps(dep2, destdir)
+
+        for qml_dir in qml_dirs:
+            qml_dir = Path(file).parent.joinpath(qml_dir).resolve().parent
+            shutil.copytree(qml_dir, destdir.joinpath(qml_dir.name), dirs_exist_ok=True)
 
 
-def deploy(file, d):
-    print("deploying " + file)
+def copy_deps(file, destdir):
     cygpath = msys2_run(f"cygpath -u {file}")
     s = msys2_run(f"ldd {cygpath}")
-
-    destdir = Path(d).resolve().joinpath("dist")
-    destdir.mkdir(exist_ok=True)
 
     for line in s.split("\n"):
         dep = line.split("=>")[1].split()[0]
@@ -46,14 +52,17 @@ def deploy(file, d):
             print(real_dep)
             shutil.copy(real_dep, destdir)
 
-    shutil.copy(file, destdir)
 
-    shutil.copytree(
-        get_real_dep("/ucrt64/share/qt6/qml/QtQuick"),
-        destdir.joinpath("QtQuick"),
-        dirs_exist_ok=True,
-    )
+def deploy(file, d):
+    destdir = Path(d).resolve().joinpath("dist")
+    destdir.mkdir(exist_ok=True)
+    print("deploying " + file)
+
+    copy_deps(file, destdir)
+
     shutil.copytree(
         get_real_dep("/ucrt64/share/qt6/plugins"), destdir, dirs_exist_ok=True
     )
-    # copy_plugins(destdir)
+
+    shutil.copy(file, destdir)
+    deploy_if_qml(file, destdir)
