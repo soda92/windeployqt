@@ -15,7 +15,8 @@
             },
             "args": [
                 "-d",
-                "../qtquick_untitled"
+                "../qtquick_untitled",
+                "-Is"
             ]
         }
     ]
