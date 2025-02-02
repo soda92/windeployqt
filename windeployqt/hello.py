@@ -62,7 +62,7 @@ def main(d):
         deploy(file, d)
 
 
-if __name__ == "__main__":
+def main2():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--dir", "-d", type=str, default=os.getcwd(), help="project directory"
@@ -71,3 +71,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     d = Path(args.dir).resolve()
     main(d)
+
+
+if __name__ == "__main__":
+    main2()
