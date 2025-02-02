@@ -7,7 +7,7 @@ from pathlib import Path
 
 def get_all_exe(d):
     files = glob.glob("**/*.exe", recursive=True, root_dir=str(d))
-    files = list(files)
+    files = list(map(lambda x: str(d.joinpath(x)).replace("\\", "/"), files))
     return files
 
 
@@ -36,8 +36,20 @@ def choose(files):
     return files[selected]
 
 
+def get_valid_files(files):
+    import re
+
+    ret = []
+    for f in files:
+        if re.match(r".*/CMakeFiles/[0-9\.]+/.*", f, re.IGNORECASE):
+            continue
+        ret.append(f)
+    return ret
+
+
 def main(d):
     files = get_all_exe(d)
+    files = get_valid_files(files)
     if len(files) == 0:
         print("no exe found")
         return
@@ -45,7 +57,7 @@ def main(d):
         deploy(files[0])
     else:
         file = choose(files)
-        deploy(file)
+        deploy(file, d)
 
 
 if __name__ == "__main__":
