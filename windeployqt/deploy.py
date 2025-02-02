@@ -47,4 +47,13 @@ def deploy(file, d):
             shutil.copy(real_dep, destdir)
 
     shutil.copy(file, destdir)
-    copy_plugins(destdir)
+
+    shutil.copytree(
+        get_real_dep("/ucrt64/share/qt6/qml/QtQuick"),
+        destdir.joinpath("QtQuick"),
+        dirs_exist_ok=True,
+    )
+    shutil.copytree(
+        get_real_dep("/ucrt64/share/qt6/plugins"), destdir, dirs_exist_ok=True
+    )
+    # copy_plugins(destdir)
