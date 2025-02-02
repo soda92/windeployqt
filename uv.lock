@@ -561,7 +561,7 @@ wheels = [
 
 [[package]]
 name = "windeployqt"
-version = "2025.2.2.0"
+version = "2025.2.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "pywin32" },

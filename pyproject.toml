@@ -14,7 +14,7 @@ dev = ["build", "twine"]
 Repository = "https://github.com/soda92/windeployqt"
 
 [project.scripts]
-windeployqt = "windeployqt.hello:main2"
+windeployqt = "windeployqt.main:main"
 
 [build-system]
 requires = ["hatchling"]

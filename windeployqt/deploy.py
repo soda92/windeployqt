@@ -22,7 +22,7 @@ def get_real_dep(dep):
 
 def deploy_if_qml(file, destdir):
     qml_dirs = list(
-        glob.glob("**/qmldir", recursive=True, root_dir=str(Path(file).parent))
+        glob.glob("*/qmldir", root_dir=str(Path(file).parent))
     )
     if len(qml_dirs) > 0:
         shutil.copytree(

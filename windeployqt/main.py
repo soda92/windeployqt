@@ -4,6 +4,7 @@ from windeployqt.deploy import deploy
 import argparse
 from pathlib import Path
 import subprocess
+import shutil
 
 
 def get_all_exe(d):
@@ -50,7 +51,7 @@ def get_valid_files(files, d):
     return ret
 
 
-def main2():
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--dir", "-d", type=str, default=os.getcwd(), help="project directory"
@@ -96,6 +97,8 @@ def main2():
         destdir = Path(file).resolve().parent
     else:
         destdir = Path(d).joinpath("dist")
+        if destdir.exists():
+            shutil.rmtree(destdir)
     deploy(file, d, destdir)
 
     if args.open:
@@ -108,4 +111,4 @@ def main2():
 
 
 if __name__ == "__main__":
-    main2()
+    main()
