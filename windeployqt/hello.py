@@ -36,12 +36,14 @@ def choose(files):
     return files[selected]
 
 
-def get_valid_files(files):
+def get_valid_files(files, d):
     import re
 
     ret = []
     for f in files:
         if re.match(r".*/CMakeFiles/[0-9\.]+/.*", f, re.IGNORECASE):
+            continue
+        if f.startswith(str(d.joinpath("dist")).replace("\\", "/")):
             continue
         ret.append(f)
     return ret
@@ -49,12 +51,12 @@ def get_valid_files(files):
 
 def main(d):
     files = get_all_exe(d)
-    files = get_valid_files(files)
+    files = get_valid_files(files, d)
     if len(files) == 0:
         print("no exe found")
         return
     elif len(files) == 1:
-        deploy(files[0])
+        deploy(files[0], d)
     else:
         file = choose(files)
         deploy(file, d)
