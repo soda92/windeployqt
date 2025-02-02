@@ -49,17 +49,21 @@ def get_valid_files(files, d):
     return ret
 
 
-def main(d):
+def main(d, use_symlink):
     files = get_all_exe(d)
     files = get_valid_files(files, d)
+    file = None
     if len(files) == 0:
         print("no exe found")
         return
     elif len(files) == 1:
-        deploy(files[0], d)
+        file = files[0]
     else:
         file = choose(files)
-        deploy(file, d)
+
+    file = Path(file)
+
+    deploy(file, d, use_symlink)
 
 
 def main2():
@@ -67,10 +71,30 @@ def main2():
     parser.add_argument(
         "--dir", "-d", type=str, default=os.getcwd(), help="project directory"
     )
+    parser.add_argument(
+        "--edit",
+        "-e",
+        type=bool,
+        default=True,
+        help="allow editing (use symbol links to deploy)",
+    )
+    parser.add_argument(
+        "--open",
+        "-o",
+        action="store_true",
+        default=False,
+        help="open dest folder",
+    )
 
     args = parser.parse_args()
     d = Path(args.dir).resolve()
-    main(d)
+    e = args.edit
+
+    main(d, use_symlink=e)
+    if args.open:
+        import subprocess
+
+        subprocess.Popen(f"explorer {str(d)}")
 
 
 if __name__ == "__main__":
