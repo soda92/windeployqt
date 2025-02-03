@@ -8,7 +8,7 @@
             "name": "windeployqt",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/windeployqt/hello.py",
+            "program": "${workspaceFolder}/windeployqt/main.py",
             "console": "integratedTerminal",
             "env": {
                 "PYTHONPATH": "."
@@ -16,7 +16,7 @@
             "args": [
                 "-d",
                 "../qtquick_untitled",
-                "-Is"
+                "--symlink"
             ]
         }
     ]

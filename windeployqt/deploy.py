@@ -22,15 +22,18 @@ def get_cyg_prefix() -> Path:
 
 
 def get_real_dep(dep: str) -> str:
+    if dep.startswith("/"):
+        dep = dep[1:] # avoid pathlib auto-root
     cyg_prefix = get_cyg_prefix()
     return str_path(cyg_prefix.joinpath(dep))
 
 
 def deploy_if_qml(file, destdir):
     qml_dirs = list(glob.glob("*/qmldir", root_dir=str(Path(file).parent)))
+    qml_src = get_real_dep("/ucrt64/share/qt6/qml/QtQuick")
     if len(qml_dirs) > 0:
         shutil.copytree(
-            get_real_dep("/ucrt64/share/qt6/qml/QtQuick"),
+            qml_src,
             destdir.joinpath("QtQuick"),
             dirs_exist_ok=True,
         )
@@ -40,7 +43,7 @@ def deploy_if_qml(file, destdir):
         for qml_dir in qml_dirs:
             qml_dir = Path(file).parent.joinpath(qml_dir).resolve().parent
             dst = destdir.joinpath(qml_dir.name)
-            if qml_dir != dst: # inplace
+            if qml_dir != dst:  # inplace
                 shutil.copytree(qml_dir, dst, dirs_exist_ok=True)
 
 
