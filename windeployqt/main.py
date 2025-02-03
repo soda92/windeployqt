@@ -112,7 +112,7 @@ def main():
     if args.symlink:
         from windeployqt.desktop import create_shortcut
 
-        create_shortcut(dst=file, name=file.name)
+        create_shortcut(dst=destdir.joinpath(file.name), name=file.name)
 
 
 if __name__ == "__main__":
