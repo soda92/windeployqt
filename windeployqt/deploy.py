@@ -2,6 +2,11 @@ import subprocess
 from pathlib import Path
 import shutil
 import glob
+import functools
+
+
+def str_path(p: Path):
+    return str(p).replace("\\", "/")
 
 
 def msys2_run(cmd):
@@ -9,40 +14,41 @@ def msys2_run(cmd):
     return s
 
 
-cyg_prefix = ""
+@functools.cache
+def get_cyg_prefix() -> Path:
+    s = msys2_run("cygpath -m /ucrt64/bin/bash")
+    cyg_prefix = s.split("/ucrt64/bin")[0]
+    return Path(cyg_prefix)
 
 
-def get_real_dep(dep):
-    global cyg_prefix
-    if cyg_prefix == "":
-        s = msys2_run("cygpath -m /ucrt64/bin/bash")
-        cyg_prefix = s.split("/ucrt64/bin")[0]
-    return cyg_prefix + dep
+def get_real_dep(dep: str) -> str:
+    if dep.startswith("/"):
+        dep = dep[1:] # avoid pathlib auto-root
+    cyg_prefix = get_cyg_prefix()
+    return str_path(cyg_prefix.joinpath(dep))
 
 
 def deploy_if_qml(file, destdir):
-    qml_dirs = list(
-        glob.glob("*/qmldir", root_dir=str(Path(file).parent))
-    )
+    qml_dirs = list(glob.glob("*/qmldir", root_dir=str(Path(file).parent)))
+    qml_src = get_real_dep("/ucrt64/share/qt6/qml/QtQuick")
     if len(qml_dirs) > 0:
         shutil.copytree(
-            get_real_dep("/ucrt64/share/qt6/qml/QtQuick"),
+            qml_src,
             destdir.joinpath("QtQuick"),
             dirs_exist_ok=True,
         )
-        dep2 = str(destdir.joinpath("QtQuick/qtquick2plugin.dll")).replace("\\", "/")
+        dep2 = str_path(destdir.joinpath("QtQuick/qtquick2plugin.dll"))
         copy_deps(dep2, destdir)
 
         for qml_dir in qml_dirs:
             qml_dir = Path(file).parent.joinpath(qml_dir).resolve().parent
             dst = destdir.joinpath(qml_dir.name)
-            if qml_dir != dst:
+            if qml_dir != dst:  # inplace
                 shutil.copytree(qml_dir, dst, dirs_exist_ok=True)
 
 
-def copy_deps(file: Path, destdir):
-    file_str = str(file).replace("\\", "/")
-    cygpath = msys2_run(f"cygpath -u {file_str}")
+def copy_deps(file: Path, destdir: Path):
+    cygpath = msys2_run(f"cygpath -u {str_path(file)}")
     s = msys2_run(f"ldd {cygpath}")
 
     for line in s.split("\n"):
@@ -62,8 +68,7 @@ def copy_deps(file: Path, destdir):
             shutil.copy(real_dep, destdir)
 
 
-def deploy(file, d, destdir):
-    destdir.mkdir(exist_ok=True)
+def deploy(file: Path, project_dir: Path, destdir: Path):
     print("deploying " + str(file))
 
     copy_deps(file, destdir)
@@ -72,6 +77,6 @@ def deploy(file, d, destdir):
         get_real_dep("/ucrt64/share/qt6/plugins"), destdir, dirs_exist_ok=True
     )
 
-    if not Path(file).parent == Path(destdir):
+    if not file.parent == destdir:  # no need to copy (error: same file)
         shutil.copy(file, destdir)
     deploy_if_qml(file, destdir)

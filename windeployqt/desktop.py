@@ -2,7 +2,7 @@ from win32com.client import Dispatch
 from pathlib import Path
 
 
-def create_shortcut1(lnk, dst):
+def create_shortcut1(lnk: Path, dst: Path):
     shell = Dispatch("WScript.Shell")
     shortcut = shell.CreateShortCut(str(lnk))
     shortcut.Targetpath = str(dst)
@@ -10,7 +10,7 @@ def create_shortcut1(lnk, dst):
     shortcut.save()
 
 
-def create_shortcut(dst, name):
+def create_shortcut(dst: Path, name: str):
     home_folder = Path.home()
     desktop = home_folder.joinpath(r"Desktop")
     lnk_file = desktop.joinpath(f"{name}.lnk")

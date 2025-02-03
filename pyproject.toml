@@ -1,7 +1,7 @@
 [project]
 name = "windeployqt"
-version = "2025.2.3.0"
-description = "Add your description here"
+version = "2025.2.3.3"
+description = "deploy Qt app using MSYS2"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
